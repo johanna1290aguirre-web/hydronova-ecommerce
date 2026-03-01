@@ -1,93 +1,72 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from 'react-toastify';
+import { addToCartBackend, getCartFromBackend, removeFromCartBackend } from '../services/api';
 
-// Crear el contexto
 const CartContext = createContext();
 
-// Proveedor del contexto
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
+  const [usuario, setUsuario] = useState(null);
 
-  // Agregar producto al carrito
-  const addToCart = (product) => {
-    // Usar setTimeout para evitar notificaciones duplicadas en desarrollo
-    setTimeout(() => {
-      setCart(prevCart => {
-        // Verificar si el producto ya está en el carrito
-        const existingItem = prevCart.find(item => item.id === product.id);
-        
-        if (existingItem) {
-          // Si existe, aumentar cantidad y mostrar notificación
-          toast.info(`🛒 ${product.nombre} (cantidad actualizada a ${existingItem.cantidad + 1})`, {
-            position: "bottom-right",
-            autoClose: 2000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "dark",
-            toastId: `update-${product.id}` // ID único para evitar duplicados
-          });
-          
-          return prevCart.map(item =>
-            item.id === product.id
-              ? { ...item, cantidad: item.cantidad + 1 }
-              : item
-          );
-        } else {
-          // Si no existe, agregar nuevo con cantidad 1
-          toast.success(`✅ ${product.nombre} agregado al carrito`, {
-            position: "bottom-right",
-            autoClose: 2000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "dark",
-            toastId: `add-${product.id}` // ID único para evitar duplicados
-          });
-          
-          return [...prevCart, { ...product, cantidad: 1 }];
+  // Cargar usuario desde localStorage al iniciar
+  useEffect(() => {
+    const usuarioGuardado = localStorage.getItem('usuario');
+    if (usuarioGuardado) {
+      setUsuario(JSON.parse(usuarioGuardado));
+    }
+  }, []);
+
+  // Cargar carrito desde el backend cuando el usuario cambie
+  useEffect(() => {
+    const cargarCarrito = async () => {
+      if (usuario && usuario.id) {
+        try {
+          const data = await getCartFromBackend(usuario.id);
+          setCart(data);
+        } catch (error) {
+          console.error('Error al cargar carrito:', error);
         }
-      });
-    }, 0);
-  };
+      }
+    };
+    cargarCarrito();
+  }, [usuario]);
 
-  // Eliminar producto del carrito
-  const removeFromCart = (productId) => {
-    setCart(prevCart => {
-      const product = prevCart.find(item => item.id === productId);
+  const addToCart = async (product) => {
+    if (!usuario) {
+      toast.warning('Debes iniciar sesión para agregar productos');
+      return;
+    }
+
+    try {
+      await addToCartBackend(usuario.id, product.id, 1);
       
-      toast.error(`🗑️ ${product.nombre} eliminado del carrito`, {
-        position: "bottom-right",
-        autoClose: 2000,
-        theme: "dark",
-        toastId: `remove-${productId}`
-      });
+      // Actualizar carrito local
+      const updatedCart = await getCartFromBackend(usuario.id);
+      setCart(updatedCart);
       
-      return prevCart.filter(item => item.id !== productId);
-    });
+      toast.success(`✅ ${product.nombre} agregado al carrito`);
+    } catch (error) {
+      toast.error('Error al agregar al carrito');
+    }
   };
 
-  // Actualizar cantidad
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity < 1) return;
-    
-    setCart(prevCart =>
-      prevCart.map(item =>
-        item.id === productId 
-          ? { ...item, cantidad: newQuantity } 
-          : item
-      )
-    );
+  const removeFromCart = async (itemId) => {
+    try {
+      await removeFromCartBackend(itemId);
+      
+      const updatedCart = await getCartFromBackend(usuario.id);
+      setCart(updatedCart);
+      
+      toast.info('🗑️ Producto eliminado del carrito');
+    } catch (error) {
+      toast.error('Error al eliminar');
+    }
   };
 
-  // Calcular total
   const getTotal = () => {
-    return cart.reduce((total, item) => total + (item.precio * item.cantidad), 0);
+    return cart.reduce((total, item) => total + (Number(item.precio) * item.cantidad), 0);
   };
 
-  // Obtener cantidad de items
   const getItemCount = () => {
     return cart.reduce((count, item) => count + item.cantidad, 0);
   };
@@ -97,16 +76,16 @@ export const CartProvider = ({ children }) => {
       cart,
       addToCart,
       removeFromCart,
-      updateQuantity,
       getTotal,
-      getItemCount
+      getItemCount,
+      usuario,
+      setUsuario
     }}>
       {children}
     </CartContext.Provider>
   );
 };
 
-// Hook personalizado para usar el carrito
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {

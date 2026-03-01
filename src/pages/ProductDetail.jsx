@@ -1,23 +1,38 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { FaShoppingCart } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { getProductById } from '../services/api';
 
 const ProductDetail = () => {
   const { id } = useParams();
-  
-  // Simular obtención de producto por ID
-  const productos = {
-    1: { nombre: 'Pack Superfoods Orgánicos', descripcion: 'Quinua, chía, maca y espirulina', precio: 89900, detalle: 'Mezcla equilibrada de los superalimentos más nutritivos. Ideal para batidos, desayunos y snacks.' },
-    2: { nombre: 'Vitaminas Esenciales', descripcion: 'Complejo vitamínico natural', precio: 65900, detalle: 'Fórmula completa con vitaminas A, C, D, E y complejo B. Sin aditivos artificiales.' },
-    3: { nombre: 'Té Antioxidante Premium', descripcion: 'Mezcla de hierbas orgánicas', precio: 45900, detalle: 'Combinación de té verde, jengibre y cúrcuma. Alto poder antioxidante.' },
-  };
+  const { addToCart } = useCart();
+  const [producto, setProducto] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const producto = productos[id] || { nombre: 'Producto no encontrado', precio: 0 };
+  useEffect(() => {
+    const cargarProducto = async () => {
+      try {
+        const data = await getProductById(id);
+        setProducto(data);
+      } catch (error) {
+        console.error('Error al cargar producto:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const agregarAlCarrito = () => {
-    alert(`${producto.nombre} agregado al carrito`);
-  };
+    cargarProducto();
+  }, [id]);
+
+  if (loading) {
+    return <Container className="text-center mt-5">Cargando producto...</Container>;
+  }
+
+  if (!producto) {
+    return <Container className="text-center mt-5">Producto no encontrado</Container>;
+  }
 
   return (
     <Container className="main-container">
@@ -42,7 +57,7 @@ const ProductDetail = () => {
           }}>
             <h1 style={{ color: '#fff', marginBottom: '1rem' }}>{producto.nombre}</h1>
             <p style={{ color: '#ccc', fontSize: '1.1rem', lineHeight: '1.6' }}>
-              {producto.detalle || producto.descripcion}
+              {producto.descripcion}
             </p>
             <div style={{
               color: '#FFD700',
@@ -50,10 +65,10 @@ const ProductDetail = () => {
               fontWeight: 'bold',
               margin: '2rem 0'
             }}>
-              ${producto.precio.toLocaleString('es-CO')} COP
+              ${Number(producto.precio).toLocaleString('es-CO')} COP
             </div>
             <button
-              onClick={agregarAlCarrito}
+              onClick={() => addToCart(producto)}
               style={{
                 background: 'linear-gradient(135deg, #E02B59 0%, #C01A4A 100%)',
                 color: 'white',
@@ -64,11 +79,8 @@ const ProductDetail = () => {
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '1rem',
-                transition: 'all 0.3s ease'
+                gap: '1rem'
               }}
-              onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
             >
               <FaShoppingCart /> Agregar al carrito
             </button>

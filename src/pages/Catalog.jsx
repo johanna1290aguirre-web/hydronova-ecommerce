@@ -1,22 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import { FaShoppingCart, FaEye } from 'react-icons/fa';
 import { useCart } from '../context/CartContext';
+import { getProducts } from '../services/api';
 
 const Catalog = () => {
   const { addToCart } = useCart();
+  const [productos, setProductos] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const productos = [
-    { id: 1, nombre: 'Pack Superfoods Orgánicos', descripcion: 'Quinua, chía, maca y espirulina', precio: 89900 },
-    { id: 2, nombre: 'Vitaminas Esenciales', descripcion: 'Complejo vitamínico natural', precio: 65900 },
-    { id: 3, nombre: 'Té Antioxidante Premium', descripcion: 'Mezcla de hierbas orgánicas', precio: 45900 },
-    { id: 4, nombre: 'Proteína Vegana', descripcion: 'Proteína de arveja y arroz', precio: 129900 },
-    { id: 5, nombre: 'Aceite de Coco', descripcion: 'Prensado en frío', precio: 35900 },
-  ];
+  useEffect(() => {
+    const cargarProductos = async () => {
+      try {
+        const data = await getProducts();
+        setProductos(data);
+      } catch (error) {
+        console.error('Error al cargar productos:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarProductos();
+  }, []);
 
   const verProducto = (id) => {
     window.location.href = `/producto/${id}`;
   };
+
+  if (loading) {
+    return <Container className="text-center mt-5">Cargando productos...</Container>;
+  }
 
   return (
     <Container className="main-container">
@@ -28,7 +42,7 @@ const Catalog = () => {
             <div className="card-title">{producto.nombre}</div>
             <div className="card-text">{producto.descripcion}</div>
             <div className="precio">
-              ${producto.precio.toLocaleString('es-CO')} COP
+              ${Number(producto.precio).toLocaleString('es-CO')} COP
             </div>
             
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
@@ -41,7 +55,11 @@ const Catalog = () => {
                   color: '#FFD700',
                   padding: '0.8rem',
                   borderRadius: '50px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
                 }}
               >
                 <FaEye /> Ver
@@ -56,7 +74,11 @@ const Catalog = () => {
                   color: 'white',
                   padding: '0.8rem',
                   borderRadius: '50px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
                 }}
               >
                 <FaShoppingCart /> Agregar
