@@ -12,7 +12,11 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     const usuarioGuardado = localStorage.getItem('usuario');
     if (usuarioGuardado) {
-      setUsuario(JSON.parse(usuarioGuardado));
+      try {
+        setUsuario(JSON.parse(usuarioGuardado));
+      } catch (error) {
+        console.error('Error al parsear usuario:', error);
+      }
     }
   }, []);
 
@@ -25,7 +29,10 @@ export const CartProvider = ({ children }) => {
           setCart(data);
         } catch (error) {
           console.error('Error al cargar carrito:', error);
+          setCart([]);
         }
+      } else {
+        setCart([]);
       }
     };
     cargarCarrito();
@@ -39,26 +46,25 @@ export const CartProvider = ({ children }) => {
 
     try {
       await addToCartBackend(usuario.id, product.id, 1);
-      
-      // Actualizar carrito local
       const updatedCart = await getCartFromBackend(usuario.id);
       setCart(updatedCart);
-      
       toast.success(`✅ ${product.nombre} agregado al carrito`);
     } catch (error) {
+      console.error('Error al agregar:', error);
       toast.error('Error al agregar al carrito');
     }
   };
 
   const removeFromCart = async (itemId) => {
+    if (!usuario) return;
+
     try {
       await removeFromCartBackend(itemId);
-      
       const updatedCart = await getCartFromBackend(usuario.id);
       setCart(updatedCart);
-      
       toast.info('🗑️ Producto eliminado del carrito');
     } catch (error) {
+      console.error('Error al eliminar:', error);
       toast.error('Error al eliminar');
     }
   };
@@ -71,15 +77,23 @@ export const CartProvider = ({ children }) => {
     return cart.reduce((count, item) => count + item.cantidad, 0);
   };
 
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    setUsuario(null);
+    setCart([]);
+  };
+
   return (
     <CartContext.Provider value={{
       cart,
+      usuario,
+      setUsuario,
       addToCart,
       removeFromCart,
       getTotal,
       getItemCount,
-      usuario,
-      setUsuario
+      logout
     }}>
       {children}
     </CartContext.Provider>

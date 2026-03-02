@@ -5,14 +5,12 @@ import { FaHeartbeat, FaShoppingCart, FaUser, FaSignOutAlt } from 'react-icons/f
 import { useCart } from '../context/CartContext';
 
 const Navbar = () => {
-  const { usuario, setUsuario, getItemCount } = useCart();
+  const { usuario, logout, getItemCount } = useCart();
   const navigate = useNavigate();
   const itemCount = getItemCount();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    setUsuario(null);
+    logout();
     navigate('/login');
   };
 
@@ -32,7 +30,7 @@ const Navbar = () => {
             {usuario ? (
               <>
                 <span className="nav-link" style={{ color: '#FFD700' }}>
-                  <FaUser /> {usuario.nombre}
+                  <FaUser /> {usuario.nombre || usuario.email}
                 </span>
                 <Nav.Link onClick={handleLogout} style={{ cursor: 'pointer' }}>
                   <FaSignOutAlt /> Cerrar sesión
