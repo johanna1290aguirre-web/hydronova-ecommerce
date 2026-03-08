@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Form } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
 import { loginUser, registerUser } from '../services/api';
+import { useCart } from '../context/CartContext';
 
 const Login = () => {
   const [esRegistro, setEsRegistro] = useState(false);
@@ -12,13 +12,10 @@ const Login = () => {
     confirmPassword: ''
   });
   const [mensaje, setMensaje] = useState('');
-  const navigate = useNavigate();
+  const { setUsuario } = useCart();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -30,9 +27,8 @@ const Login = () => {
         setMensaje('❌ Las contraseñas no coinciden');
         return;
       }
-
       try {
-        const response = await registerUser({
+        await registerUser({
           nombre: formData.nombre,
           email: formData.email,
           password: formData.password
@@ -43,7 +39,7 @@ const Login = () => {
           setFormData({ nombre: '', email: '', password: '', confirmPassword: '' });
         }, 2000);
       } catch (error) {
-        if (error.response && error.response.data && error.response.data.error) {
+        if (error.response?.data?.error) {
           setMensaje(`❌ ${error.response.data.error}`);
         } else {
           setMensaje('❌ Error al registrar. Intenta de nuevo.');
@@ -57,6 +53,7 @@ const Login = () => {
         });
         localStorage.setItem('token', response.token);
         localStorage.setItem('usuario', JSON.stringify(response.usuario));
+        setUsuario(response.usuario);
         setMensaje('✅ Login exitoso. Redirigiendo...');
         setTimeout(() => {
           window.location.href = '/';
@@ -73,7 +70,7 @@ const Login = () => {
         <h1 className="login-title">
           {esRegistro ? 'Crear Cuenta' : 'Iniciar Sesión'}
         </h1>
-        
+
         {mensaje && (
           <div style={{
             padding: '1rem',
@@ -91,52 +88,28 @@ const Login = () => {
           {esRegistro && (
             <Form.Group className="mb-3">
               <Form.Label>Nombre completo</Form.Label>
-              <Form.Control
-                type="text"
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleChange}
-                placeholder="Tu nombre"
-                required
-              />
+              <Form.Control type="text" name="nombre" value={formData.nombre}
+                onChange={handleChange} placeholder="Tu nombre" required />
             </Form.Group>
           )}
 
           <Form.Group className="mb-3">
             <Form.Label>Email</Form.Label>
-            <Form.Control
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="correo@ejemplo.com"
-              required
-            />
+            <Form.Control type="email" name="email" value={formData.email}
+              onChange={handleChange} placeholder="correo@ejemplo.com" required />
           </Form.Group>
 
           <Form.Group className="mb-3">
             <Form.Label>Contraseña</Form.Label>
-            <Form.Control
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="********"
-              required
-            />
+            <Form.Control type="password" name="password" value={formData.password}
+              onChange={handleChange} placeholder="********" required />
           </Form.Group>
 
           {esRegistro && (
             <Form.Group className="mb-3">
               <Form.Label>Confirmar contraseña</Form.Label>
-              <Form.Control
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="********"
-                required
-              />
+              <Form.Control type="password" name="confirmPassword" value={formData.confirmPassword}
+                onChange={handleChange} placeholder="********" required />
             </Form.Group>
           )}
 
@@ -147,13 +120,9 @@ const Login = () => {
 
         <div className="login-footer">
           {esRegistro ? (
-            <>
-              ¿Ya tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); setEsRegistro(false); }}>Inicia sesión aquí</a>
-            </>
+            <>¿Ya tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); setEsRegistro(false); }}>Inicia sesión aquí</a></>
           ) : (
-            <>
-              ¿No tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); setEsRegistro(true); }}>Regístrate aquí</a>
-            </>
+            <>¿No tienes cuenta? <a href="#" onClick={(e) => { e.preventDefault(); setEsRegistro(true); }}>Regístrate aquí</a></>
           )}
         </div>
       </div>
