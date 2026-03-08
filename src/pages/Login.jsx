@@ -26,7 +26,6 @@ const Login = () => {
     setMensaje('');
 
     if (esRegistro) {
-      // Validar que las contraseñas coincidan
       if (formData.password !== formData.confirmPassword) {
         setMensaje('❌ Las contraseñas no coinciden');
         return;
@@ -60,10 +59,9 @@ const Login = () => {
         localStorage.setItem('usuario', JSON.stringify(response.usuario));
         setMensaje('✅ Login exitoso. Redirigiendo...');
         setTimeout(() => {
-          navigate('/');
+          window.location.href = '/';
         }, 1500);
       } catch (error) {
-        // ✅ Mensaje personalizado para credenciales incorrectas
         setMensaje('❌ Correo o contraseña incorrectos');
       }
     }
