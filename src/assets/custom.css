@@ -22,10 +22,10 @@ body {
   display: block;
 }
 
-/* Reset Bootstrap */
-.container, .container-fluid, .row, .col, [class*="col-"] {
-  margin: 0 !important;
-  padding: 0 !important;
+/* Reset Bootstrap - CORREGIDO */
+.container, .container-fluid {
+  padding-left: 15px !important;
+  padding-right: 15px !important;
 }
 
 /* Navbar - PEGADO ARRIBA */
@@ -42,7 +42,7 @@ body {
 
 .custom-navbar .container {
   margin: 0 auto !important;
-  padding: 0 !important;
+  padding: 0 15px !important;
   max-width: 1400px;
 }
 
@@ -88,6 +88,21 @@ body {
 
 .custom-navbar .nav-link:hover::after {
   width: 100%;
+}
+
+/* Botón hamburguesa */
+.custom-navbar .navbar-toggler {
+  border-color: #E02B59 !important;
+}
+
+.custom-navbar .navbar-toggler-icon {
+  filter: invert(1);
+}
+
+/* Menú desplegable móvil */
+.custom-navbar .navbar-collapse {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  padding: 1rem 0;
 }
 
 /* Contenedor principal */
@@ -323,17 +338,23 @@ body {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   h1 {
     font-size: 2rem;
     margin: 1rem 0 2rem;
   }
-  
+
   .custom-navbar .nav-link {
     margin: 10px 0;
   }
+
+  .main-container {
+    padding: 0 1rem;
+  }
 }
- {
+
+/* ========== ESTILOS CARRITO MODERNO ========== */
+.cart-item-moderno {
   background: linear-gradient(145deg, #1A1A1A 0%, #2D2D2D 100%);
   border-radius: 20px;
   padding: 1.5rem;
